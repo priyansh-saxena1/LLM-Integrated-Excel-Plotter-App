@@ -40,3 +40,25 @@ class DataProcessor:
     def preview(self, n=5):
         return self.data.head(n).to_dict(orient='records')
 
+    def get_dtypes(self) -> dict:
+        result = {}
+        for col, dtype in self.data.dtypes.items():
+            if pd.api.types.is_integer_dtype(dtype):
+                result[col] = "integer"
+            elif pd.api.types.is_float_dtype(dtype):
+                result[col] = "float"
+            elif pd.api.types.is_datetime64_any_dtype(dtype):
+                result[col] = "datetime"
+            elif pd.api.types.is_bool_dtype(dtype):
+                result[col] = "boolean"
+            else:
+                result[col] = "string"
+        return result
+
+    def get_stats(self) -> dict:
+        numeric = self.data.select_dtypes(include='number')
+        if numeric.empty:
+            return {}
+        desc = numeric.describe().to_dict()
+        return {col: {k: round(v, 4) for k, v in stats.items()} for col, stats in desc.items()}
+

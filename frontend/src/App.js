@@ -5,24 +5,34 @@ import FileUpload from './components/FileUpload';
 import './main.css';
 
 const App = () => {
-    const [chartPath, setChartPath] = useState('');
+    const [chartPath, setChartPath]           = useState('');
+    const [chartSpec, setChartSpec]           = useState(null);
     const [uploadedFilePath, setUploadedFilePath] = useState('');
 
     return (
-        <div className="app-container">
-            <div className="header">
-                <h1>Excel Plotter Chatbot</h1>
-                <p style={{color:'#4f8cff', fontWeight:500, marginTop:0}}>AI-powered Excel charting with natural language</p>
-            </div>
-            <div className="section-card">
-                <FileUpload onUploadSuccess={setUploadedFilePath} />
-            </div>
-            <div className="section-card">
-                <Chatbot setChartPath={setChartPath} uploadedFilePath={uploadedFilePath} />
-            </div>
-            <div className="section-card">
-                <ChartDisplay chartPath={chartPath} />
-            </div>
+        <div className="app-root">
+            <header className="app-header">
+                <h1>AI Data Analyst</h1>
+                <p className="app-subtitle">Natural language data visualization — upload a CSV and ask anything</p>
+            </header>
+
+            <main className="app-body">
+                <aside className="sidebar">
+                    <FileUpload onUploadSuccess={setUploadedFilePath} />
+                </aside>
+
+                <section className="chat-panel">
+                    <Chatbot
+                        setChartPath={setChartPath}
+                        setChartSpec={setChartSpec}
+                        uploadedFilePath={uploadedFilePath}
+                    />
+                </section>
+
+                <section className="chart-panel">
+                    <ChartDisplay chartPath={chartPath} chartSpec={chartSpec} />
+                </section>
+            </main>
         </div>
     );
 };
