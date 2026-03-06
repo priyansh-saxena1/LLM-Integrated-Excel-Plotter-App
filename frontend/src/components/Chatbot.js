@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://archcoder-llm-excel-plotter-agent.hf.space';
+const API_URL =
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) ||
+  'https://archcoder-llm-excel-plotter-agent.hf.space';
 
 const MODEL_OPTIONS = [
   { label: 'Qwen 2.5-1.5B (HuggingFace)', value: 'qwen' },

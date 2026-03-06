@@ -1,7 +1,9 @@
 ﻿import React from 'react';
 import Plot from 'react-plotly.js';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://archcoder-llm-excel-plotter-agent.hf.space';
+const API_URL =
+    (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) ||
+    'https://archcoder-llm-excel-plotter-agent.hf.space';
 
 const ChartDisplay = ({ chartPath, chartSpec }) => {
     if (chartSpec && chartSpec.data) {
