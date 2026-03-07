@@ -14,10 +14,10 @@ const ChartDisplay = ({ chartPath, chartSpec }) => {
                     layout={{
                         ...chartSpec.layout,
                         autosize: true,
-                        margin: { l: 60, r: 30, t: 60, b: 60 },
+                        margin: { l: 50, r: 20, t: 50, b: 50 },
                     }}
-                    config={{ responsive: true, displaylogo: false }}
-                    style={{ width: '100%', minHeight: '420px' }}
+                    config={{ responsive: true, displaylogo: false, displayModeBar: false }}
+                    style={{ width: '100%', minHeight: '380px' }}
                 />
             </div>
         );
@@ -29,7 +29,6 @@ const ChartDisplay = ({ chartPath, chartSpec }) => {
                 <img
                     src={`${API_URL}/${chartPath}`}
                     alt="Generated chart"
-                    style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px' }}
                 />
             </div>
         );
@@ -37,7 +36,8 @@ const ChartDisplay = ({ chartPath, chartSpec }) => {
 
     return (
         <div className="chart-display chart-empty">
-            <p>No chart generated yet. Ask a question to visualize your data.</p>
+            <div className="chart-empty-icon">📊</div>
+            <p>Your chart will appear here</p>
         </div>
     );
 };

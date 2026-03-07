@@ -6,23 +6,17 @@ const API_URL =
   'https://archcoder-llm-excel-plotter-agent.hf.space';
 
 const MODEL_OPTIONS = [
-  { label: 'Qwen 2.5-1.5B (HuggingFace)', value: 'qwen' },
-  { label: 'Gemini 2.0 Flash',             value: 'gemini' },
-  { label: 'Grok-3 Mini',                  value: 'grok' },
-  { label: 'BART (fine-tuned)',             value: 'bart' },
+  { label: 'Qwen 2.5-1.5B',    value: 'qwen' },
+  { label: 'BART (fine-tuned)', value: 'bart' },
 ];
 
 const SAMPLE_QUERIES = [
-  "plot the sales in the years with a red line",
-  "show employee expenses and net profit over the years",
-  "display the EBITDA for each year with a blue bar",
-  "plot the RoCE over time as a scatter chart",
-  "show sales as an area chart",
-  "display the net profit in a bar chart",
-  "plot EBIT and EBITDA over the years",
+  "plot the sales over the years with a red line",
+  "bar chart of employee expenses by year",
   "scatter plot of sales vs net profit",
+  "show EBITDA and EBIT over time",
+  "pie chart of sales by year",
   "histogram of net profit values",
-  "pie chart of total sales by year",
 ];
 
 const SAMPLE_DATA_CSV = [
@@ -43,7 +37,7 @@ const InlineChart = ({ chartSpec, chartPath }) => {
           <Plot
             data={chartSpec.data}
             layout={{ ...chartSpec.layout, width: undefined, autosize: true }}
-            config={{ displayModeBar: true, scrollZoom: true, displaylogo: false }}
+            config={{ displayModeBar: false, scrollZoom: true, displaylogo: false }}
             style={{ width: '100%' }}
             useResizeHandler
           />
@@ -56,7 +50,7 @@ const InlineChart = ({ chartSpec, chartPath }) => {
       <img
         src={`${API_URL}/${chartPath}?t=${Date.now()}`}
         alt="Generated chart"
-        style={{ marginTop: 12, width: '100%', borderRadius: 8, border: '1px solid #1e2d3d' }}
+        style={{ marginTop: 12, width: '100%', borderRadius: 10, border: '1px solid var(--border)' }}
       />
     );
   }
@@ -66,19 +60,9 @@ const InlineChart = ({ chartSpec, chartPath }) => {
 const ChatMessage = ({ message }) => {
   const isUser = message.role === 'user';
   return (
-    <div style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', marginBottom: 14 }}>
-      <div style={{
-        maxWidth: '85%',
-        padding: '10px 14px',
-        borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-        backgroundColor: isUser ? '#1d4ed8' : '#1e2d3d',
-        color: '#e2e8f0',
-        fontSize: 13,
-        lineHeight: 1.6,
-        border: `1px solid ${isUser ? '#2563eb' : '#2d3748'}`,
-        wordBreak: 'break-word',
-      }}>
-        {message.error && <span style={{ color: '#f87171', fontWeight: 700 }}>Error: </span>}
+    <div className={`msg-row ${isUser ? 'user' : 'assistant'}`}>
+      <div className={`msg-bubble ${isUser ? 'user' : 'assistant'}`}>
+        {message.error && <span className="msg-error">Error: </span>}
         <span>{message.content}</span>
         {(message.chartSpec || message.chartPath) && (
           <InlineChart chartSpec={message.chartSpec} chartPath={message.chartPath} />
@@ -113,7 +97,7 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
       const payload = { query, model };
       if (uploadedFilePath) payload.file_path = uploadedFilePath;
       const res = await axios.post(`${API_URL}/plot`, payload, {
-        timeout: 90000,
+        timeout: 120000,
         headers: { 'Content-Type': 'application/json' },
       });
       const { response, chart_path, chart_spec, plot_args } = res.data;
@@ -161,50 +145,40 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
     }
   };
 
+  const canSend = !loading && input.trim();
+
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      backgroundColor: '#0f1117', borderRadius: 12, border: '1px solid #1e2d3d', overflow: 'hidden',
-    }}>
+    <div className="chat-container">
       {/* Header */}
-      <div style={{
-        padding: '14px 20px', borderBottom: '1px solid #1e2d3d',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        backgroundColor: '#0d1219',
-      }}>
+      <div className="chat-header">
         <div>
-          <div style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 600 }}>AI Data Analyst</div>
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>Ask anything about your data</div>
+          <div className="chat-header-title">Chat</div>
+          <div className="chat-header-sub">Describe the chart you want</div>
         </div>
         <select
+          className="model-select"
           value={model}
           onChange={(e) => setModel(e.target.value)}
-          style={{
-            padding: '6px 10px', borderRadius: 6, border: '1px solid #2d3748',
-            backgroundColor: '#1a2332', color: '#94a3b8', fontSize: 12, cursor: 'pointer',
-          }}
         >
           {MODEL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', minHeight: 180, maxHeight: 460 }}>
+      <div className="chat-messages">
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#475569', padding: '40px 16px' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>Visualize Your Data</div>
-            <div style={{ fontSize: 13 }}>Upload a CSV or load the sample dataset, then type a query.</div>
+          <div className="chat-empty">
+            <div className="chat-empty-title">Visualize Your Data</div>
+            <div className="chat-empty-desc">Upload a CSV or load the sample dataset, then describe the chart you want.</div>
           </div>
         )}
         {messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
         {loading && (
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 14 }}>
-            <div style={{
-              padding: '10px 16px', backgroundColor: '#1e2d3d',
-              borderRadius: '16px 16px 16px 4px', border: '1px solid #2d3748',
-              color: '#64748b', fontSize: 13,
-            }}>
-              Analyzing...
+          <div className="msg-row assistant">
+            <div className="msg-bubble assistant">
+              <div className="loading-dots">
+                <span /><span /><span />
+              </div>
             </div>
           </div>
         )}
@@ -212,35 +186,28 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
       </div>
 
       {/* Sample queries bar */}
-      <div style={{ borderTop: '1px solid #1e2d3d', padding: '8px 20px' }}>
+      <div className="samples-bar">
         <button
+          className="samples-toggle"
           onClick={() => setShowSamples(!showSamples)}
-          style={{ background: 'none', border: 'none', color: '#4f8cff', cursor: 'pointer', fontSize: 12, padding: '2px 0' }}
         >
-          {showSamples ? 'Hide examples' : 'Show example queries'}
+          {showSamples ? 'Hide examples' : 'Example queries'}
         </button>
         {showSamples && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, marginBottom: 4 }}>
+          <div className="samples-grid">
             {SAMPLE_QUERIES.map((q, i) => (
               <button
                 key={i}
+                className="sample-chip"
                 onClick={() => { sendQuery(q); setShowSamples(false); }}
-                style={{
-                  background: '#1a2332', color: '#94a3b8', border: '1px solid #2d3748',
-                  padding: '4px 10px', borderRadius: 10, fontSize: 11, cursor: 'pointer',
-                }}
               >
                 {q}
               </button>
             ))}
             <button
+              className="sample-chip load-data"
               onClick={handleUseSampleData}
               disabled={loading}
-              style={{
-                background: '#14532d', color: '#4ade80', border: '1px solid #166534',
-                padding: '4px 12px', borderRadius: 10, fontSize: 11,
-                cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600,
-              }}
             >
               Load sample dataset
             </button>
@@ -249,33 +216,23 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
       </div>
 
       {/* Input bar */}
-      <div style={{ padding: '12px 20px', borderTop: '1px solid #1e2d3d', backgroundColor: '#0d1219' }}>
+      <div className="chat-input-bar">
         {uploadedFilePath && (
-          <div style={{ fontSize: 11, color: '#4f8cff', marginBottom: 6 }}>Using uploaded file</div>
+          <div className="chat-input-info">Using uploaded file</div>
         )}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
+        <form onSubmit={handleSubmit} className="chat-input-form">
           <input
+            className="chat-input"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="e.g. plot sales over years as a line chart..."
             disabled={loading}
-            style={{
-              flex: 1, padding: '10px 14px', borderRadius: 8,
-              border: '1px solid #2d3748', backgroundColor: '#1a2332',
-              color: '#e2e8f0', fontSize: 13, outline: 'none',
-            }}
           />
           <button
             type="submit"
-            disabled={loading || !input.trim()}
-            style={{
-              padding: '10px 18px', borderRadius: 8, border: 'none',
-              backgroundColor: loading || !input.trim() ? '#1e3a5f' : '#2563eb',
-              color: loading || !input.trim() ? '#475569' : 'white',
-              fontSize: 13, fontWeight: 600, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-              whiteSpace: 'nowrap',
-            }}
+            disabled={!canSend}
+            className={`chat-send-btn ${canSend ? 'active' : 'disabled'}`}
           >
             {loading ? '...' : 'Send'}
           </button>

@@ -31,7 +31,7 @@ class ChartGenerator:
             self.data = data
         else:
             default_csv = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "data", "sample_data.csv"
+                os.path.dirname(__file__), "data", "sample_data.csv"
             )
             self.data = pd.read_csv(default_csv) if os.path.exists(default_csv) else pd.DataFrame()
 

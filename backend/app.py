@@ -54,10 +54,10 @@ def index():
 def models():
     return jsonify({
         "models": [
-            {"id": "qwen",   "name": "Qwen2.5-1.5B",    "provider": "HuggingFace Serverless", "free": True},
-            {"id": "gemini", "name": "Gemini 2.0 Flash", "provider": "Google AI",             "free": True},
-            {"id": "grok",   "name": "Grok-3 Mini",      "provider": "xAI",                  "free": True},
-            {"id": "bart",   "name": "BART (fine-tuned)", "provider": "Local",                "free": True},
+            {"id": "qwen",   "name": "Qwen2.5-1.5B",    "provider": "Local (transformers)", "free": True},
+            {"id": "bart",   "name": "BART (fine-tuned)", "provider": "Local (transformers)", "free": True},
+            {"id": "gemini", "name": "Gemini 2.0 Flash", "provider": "Google AI (API key)",  "free": False},
+            {"id": "grok",   "name": "Grok-3 Mini",      "provider": "xAI (API key)",       "free": False},
         ],
         "default": "qwen"
     })

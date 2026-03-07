@@ -98,7 +98,7 @@ const FileUpload = ({ onUploadSuccess }) => {
 
             {columns.length > 0 && (
                 <>
-                    <div className="col-tags" style={{ marginTop: 14 }}>
+                    <div className="col-tags">
                         {columns.map((col) => (
                             <span key={col} className="col-tag">{col}</span>
                         ))}

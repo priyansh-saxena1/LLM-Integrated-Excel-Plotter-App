@@ -9,7 +9,7 @@ class DataProcessor:
         if data_path and os.path.exists(data_path):
             self.data_path = data_path
         else:
-            self.data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'sample_data.xlsx')
+            self.data_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_data.csv')
         self.data = self.load_data(self.data_path)
 
     def load_data(self, path):

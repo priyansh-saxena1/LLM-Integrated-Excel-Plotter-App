@@ -13,7 +13,7 @@ const App = () => {
         <div className="app-root">
             <header className="app-header">
                 <h1>AI Data Analyst</h1>
-                <p className="app-subtitle">Natural language data visualization — upload a CSV and ask anything</p>
+                <p className="app-subtitle">Upload a dataset and describe the chart you want</p>
             </header>
 
             <main className="app-body">

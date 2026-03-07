@@ -95,22 +95,33 @@ class LLM_Agent:
         self.chart_generator = ChartGenerator(self.data_processor.data)
         self._bart_tokenizer = None
         self._bart_model = None
+        self._qwen_tokenizer = None
+        self._qwen_model = None
 
     # -- model runners -------------------------------------------------------
 
     def _run_qwen(self, user_msg: str) -> str:
-        from huggingface_hub import InferenceClient
-        client = InferenceClient(token=os.getenv("HUGGINGFACEHUB_API_TOKEN"))
-        resp = client.chat_completion(
-            model="Qwen/Qwen2.5-1.5B-Instruct",
-            messages=[
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user",   "content": user_msg},
-            ],
-            max_tokens=256,
-            temperature=0.1,
+        if self._qwen_model is None:
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            model_id = "Qwen/Qwen2.5-1.5B-Instruct"
+            logger.info("Loading Qwen model (first request)...")
+            self._qwen_tokenizer = AutoTokenizer.from_pretrained(model_id)
+            self._qwen_model = AutoModelForCausalLM.from_pretrained(model_id)
+            logger.info("Qwen model loaded.")
+        messages = [
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user",   "content": user_msg},
+        ]
+        text = self._qwen_tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
         )
-        return resp.choices[0].message.content
+        inputs = self._qwen_tokenizer(text, return_tensors="pt")
+        outputs = self._qwen_model.generate(
+            **inputs, max_new_tokens=256, temperature=0.1, do_sample=True
+        )
+        return self._qwen_tokenizer.decode(
+            outputs[0][inputs.input_ids.shape[-1]:], skip_special_tokens=True
+        )
 
     def _run_gemini(self, user_msg: str) -> str:
         import google.generativeai as genai
