@@ -168,7 +168,7 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="chat-empty">
-            <div className="chat-empty-title">✨ Visualize Your Data</div>
+            <div className="chat-empty-title">Visualize Your Data</div>
             <div className="chat-empty-desc">Upload a CSV or load the sample dataset, then describe the chart you want. AI will generate it instantly.</div>
           </div>
         )}

@@ -36,7 +36,6 @@ const ChartDisplay = ({ chartPath, chartSpec }) => {
 
     return (
         <div className="chart-display chart-empty">
-            <div className="chart-empty-icon">📊</div>
             <p>Your chart will appear here</p>
         </div>
     );
