@@ -363,6 +363,16 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
     max-height: 480px;
 }
 
+.backend-notice {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    background: rgba(59, 130, 246, 0.12);
+    color: #bfdbfe;
+    font-size: 12px;
+}
+
 .chat-empty {
     text-align: center;
     color: var(--text-muted);

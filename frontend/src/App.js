@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Chatbot from './components/Chatbot';
 import ChartDisplay from './components/ChartDisplay';
 import FileUpload from './components/FileUpload';
+import { startWarmupPinger } from './api/client';
 import './main.css';
 
 const App = () => {
     const [chartPath, setChartPath]           = useState('');
     const [chartSpec, setChartSpec]           = useState(null);
     const [uploadedFilePath, setUploadedFilePath] = useState('');
+
+    useEffect(() => {
+        // Optional browser-side warm-up loop, disabled unless REACT_APP_WARMUP_INTERVAL_MS is set.
+        const stop = startWarmupPinger();
+        return () => stop();
+    }, []);
 
     return (
         <div className="app-root">

@@ -78,6 +78,43 @@ The Excel Plotter Chatbot is an innovative application that combines natural lan
 2. The system processes your query and generates a relevant chart
 3. The chart is displayed on the screen
 
+## Cold Start Handling (HF Spaces + Vercel)
+
+This project includes first-request cold start handling for Hugging Face Spaces free tier:
+
+1. Backend wake endpoint:
+   - `GET /health` in `llm-excel-plotter-agent/app.py`
+   - Lightweight and safe for pings (no model inference)
+
+2. Frontend sleep detection and retries:
+   - `frontend/src/api/client.js` performs health checks and request retries
+   - Exponential backoff with jitter for retryable failures (`408/429/5xx` or network timeouts)
+   - Shows user-facing status like `Waking up server...` while backend resumes
+
+3. Optional warm-up systems:
+   - Browser interval warm-up: set `REACT_APP_WARMUP_INTERVAL_MS` (minimum enforced: 60000 ms)
+   - Vercel cron warm-up: `frontend/vercel.json` + `frontend/api/warmup.js`
+
+### Deploy Config
+
+Set these values in Vercel frontend project environment variables:
+
+- `REACT_APP_API_URL=https://<your-hf-space>.hf.space`
+- `REACT_APP_WARMUP_INTERVAL_MS=0` (set to `0` to disable browser warm-up)
+- `BACKEND_HEALTH_URL=https://<your-hf-space>.hf.space/health`
+- `CRON_SECRET=<strong-random-secret>`
+
+Set these values in Hugging Face Space settings (if not already set):
+
+- Existing model/API keys as required (`GEMINI_API_KEY`, `GROK_API_KEY`)
+
+### Why this minimizes load
+
+- Health pings are debounced client-side for 90 seconds after successful calls.
+- Warm-up interval pings only run when the tab is visible and online.
+- Retries are only triggered for retryable transient errors.
+- Health endpoint is intentionally lightweight.
+
 ## Project Setup
 
 ### Cloning the Repository

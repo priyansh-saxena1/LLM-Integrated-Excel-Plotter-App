@@ -1,9 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL =
-  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) ||
-  'https://archcoder-llm-excel-plotter-agent.hf.space';
+import { API_URL, requestWithRetry } from '../api/client';
 
 const MODEL_OPTIONS = [
   { label: 'Qwen2.5-Coder-0.5B', value: 'qwen', description: 'Fast, optimized for structured output' },
@@ -79,6 +75,7 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
   const [model, setModel]             = useState('qwen');
   const [loading, setLoading]         = useState(false);
   const [showSamples, setShowSamples] = useState(false);
+  const [backendNotice, setBackendNotice] = useState('');
   const bottomRef                     = useRef(null);
 
   useEffect(() => {
@@ -88,17 +85,47 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
   const addMessage = (msg) =>
     setMessages((prev) => [...prev, { ...msg, id: Date.now() + Math.random() }]);
 
+  const handleBackendStatus = (status, meta = {}) => {
+    if (status === 'waking') {
+      setBackendNotice('Waking up server... this can take 10-60 seconds on free tier.');
+      return;
+    }
+    if (status === 'backoff') {
+      const sec = Math.max(1, Math.round((meta.delay || 0) / 1000));
+      setBackendNotice(`Retrying request in ${sec}s...`);
+      return;
+    }
+    if (status === 'retrying') {
+      setBackendNotice(`Retry attempt ${meta.attempt || 1} of ${(meta.maxRetries || 0) + 1}...`);
+      return;
+    }
+    if (status === 'ready' || status === 'requesting') {
+      setBackendNotice('');
+      return;
+    }
+    if (status === 'failed') {
+      setBackendNotice('Server did not wake up in time. Please try again.');
+    }
+  };
+
   const sendQuery = async (query) => {
     if (!query.trim() || loading) return;
     addMessage({ role: 'user', content: query });
     setInput('');
     setLoading(true);
+    setBackendNotice('');
     try {
       const payload = { query, model };
       if (uploadedFilePath) payload.file_path = uploadedFilePath;
-      const res = await axios.post(`${API_URL}/plot`, payload, {
+      const res = await requestWithRetry({
+        method: 'post',
+        path: '/plot',
+        data: payload,
         timeout: 120000,
         headers: { 'Content-Type': 'application/json' },
+        maxRetries: 5,
+        wakeBeforeFirstTry: true,
+        onStatus: handleBackendStatus,
       });
       const { response, chart_path, chart_spec, plot_args } = res.data;
       addMessage({
@@ -116,6 +143,7 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
         error:   true,
       });
     } finally {
+      setBackendNotice('');
       setLoading(false);
     }
   };
@@ -124,13 +152,20 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
 
   const handleUseSampleData = async () => {
     setLoading(true);
+    setBackendNotice('');
     try {
       const blob     = new Blob([SAMPLE_DATA_CSV], { type: 'text/csv' });
       const formData = new FormData();
       formData.append('file', blob, 'sample_data.csv');
-      const uploadRes = await axios.post(`${API_URL}/upload`, formData, {
+      const uploadRes = await requestWithRetry({
+        method: 'post',
+        path: '/upload',
+        data: formData,
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000,
+        maxRetries: 4,
+        wakeBeforeFirstTry: true,
+        onStatus: handleBackendStatus,
       });
       addMessage({ role: 'user', content: 'Load sample financial dataset' });
       const cols = uploadRes.data.columns?.join(', ') || '';
@@ -141,6 +176,7 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
     } catch (err) {
       addMessage({ role: 'assistant', content: `Failed to load sample data: ${err.message}`, error: true });
     } finally {
+      setBackendNotice('');
       setLoading(false);
     }
   };
@@ -166,6 +202,7 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
 
       {/* Messages */}
       <div className="chat-messages">
+        {backendNotice && <div className="backend-notice">{backendNotice}</div>}
         {messages.length === 0 && (
           <div className="chat-empty">
             <div className="chat-empty-title">Visualize Your Data</div>

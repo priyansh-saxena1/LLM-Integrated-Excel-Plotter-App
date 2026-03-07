@@ -1,9 +1,5 @@
 ﻿import React, { useState } from 'react';
-import axios from 'axios';
-
-const API_URL =
-    (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) ||
-    'https://archcoder-llm-excel-plotter-agent.hf.space';
+import { requestWithRetry } from '../api/client';
 
 const FileUpload = ({ onUploadSuccess }) => {
     const [file, setFile]           = useState(null);
@@ -13,6 +9,19 @@ const FileUpload = ({ onUploadSuccess }) => {
     const [isError, setIsError]     = useState(false);
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress]   = useState(0);
+
+    const handleBackendStatus = (status, meta = {}) => {
+        if (status === 'waking') {
+            setMessage('Waking up server before upload...');
+            setIsError(false);
+            return;
+        }
+        if (status === 'backoff') {
+            const sec = Math.max(1, Math.round((meta.delay || 0) / 1000));
+            setMessage(`Server is waking up. Retrying in ${sec}s...`);
+            setIsError(false);
+        }
+    };
 
     const handleFileChange = (e) => {
         const chosen = e.target.files[0];
@@ -36,9 +45,15 @@ const FileUpload = ({ onUploadSuccess }) => {
         form.append('file', file);
 
         try {
-            const res = await axios.post(`${API_URL}/upload`, form, {
+            const res = await requestWithRetry({
+                method: 'post',
+                path: '/upload',
+                data: form,
                 headers: { 'Content-Type': 'multipart/form-data' },
                 timeout: 30000,
+                maxRetries: 4,
+                wakeBeforeFirstTry: true,
+                onStatus: handleBackendStatus,
             });
             clearInterval(tick);
             setProgress(100);
