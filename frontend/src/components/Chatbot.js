@@ -6,8 +6,8 @@ const API_URL =
   'https://archcoder-llm-excel-plotter-agent.hf.space';
 
 const MODEL_OPTIONS = [
-  { label: 'Qwen 2.5-1.5B',    value: 'qwen' },
-  { label: 'BART (fine-tuned)', value: 'bart' },
+  { label: 'Qwen2.5-Coder-0.5B', value: 'qwen', description: 'Fast, optimized for structured output' },
+  { label: 'BART (fine-tuned)', value: 'bart', description: 'Fallback seq2seq model' },
 ];
 
 const SAMPLE_QUERIES = [
@@ -168,8 +168,8 @@ const Chatbot = ({ setChartPath, setChartSpec, uploadedFilePath }) => {
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="chat-empty">
-            <div className="chat-empty-title">Visualize Your Data</div>
-            <div className="chat-empty-desc">Upload a CSV or load the sample dataset, then describe the chart you want.</div>
+            <div className="chat-empty-title">✨ Visualize Your Data</div>
+            <div className="chat-empty-desc">Upload a CSV or load the sample dataset, then describe the chart you want. AI will generate it instantly.</div>
           </div>
         )}
         {messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}

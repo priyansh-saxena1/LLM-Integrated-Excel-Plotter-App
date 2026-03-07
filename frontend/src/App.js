@@ -12,8 +12,8 @@ const App = () => {
     return (
         <div className="app-root">
             <header className="app-header">
-                <h1>AI Data Analyst</h1>
-                <p className="app-subtitle">Upload a dataset and describe the chart you want</p>
+                <h1>📊 AI Data Analyst</h1>
+                <p className="app-subtitle">Upload a CSV, describe your chart, and let Qwen visualize it</p>
             </header>
 
             <main className="app-body">
